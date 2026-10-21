@@ -99,7 +99,7 @@ resource "aws_iam_role_policy_attachment" "execution" {
 }
 
 resource "aws_iam_role_policy" "secrets" {
-  count = var.database_url_secret_arn == null ? 0 : 1
+  count = var.database_url_secret_arn == null || var.database_url_secret_arn == "" ? 0 : 1
   name  = "${var.name}-secret-read"
   role  = aws_iam_role.execution.id
   policy = jsonencode({
@@ -123,7 +123,7 @@ resource "aws_ecs_task_definition" "this" {
     essential = true
     portMappings = [{ containerPort = var.container_port, hostPort = var.container_port, protocol = "tcp" }]
     environment = [{ name = "PORT", value = tostring(var.container_port) }]
-    secrets = var.database_url_secret_arn == null ? [] : [{ name = "DATABASE_URL", valueFrom = var.database_url_secret_arn }]
+    secrets = var.database_url_secret_arn == null || var.database_url_secret_arn == "" ? [] : [{ name = "DATABASE_URL", valueFrom = var.database_url_secret_arn }]
     healthCheck = { command = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:${var.container_port}/health')\""], interval = 30, timeout = 5, retries = 3, startPeriod = 20 }
     logConfiguration = { logDriver = "awslogs", options = {
       "awslogs-group" = var.log_group_name
