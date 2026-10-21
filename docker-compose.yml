@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: nyaya
+      POSTGRES_USER: nyaya
+      POSTGRES_PASSWORD: nyaya
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nyaya -d nyaya"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  ai-api:
+    build: ./services/ai-api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nyaya:nyaya@postgres:5432/nyaya
+      ALLOWED_ORIGINS: http://localhost:3000
+    ports: ["8000:8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  chat-api:
+    build: ./services/chat-api
+    environment:
+      CHAT_DATABASE_URL: postgres://nyaya:nyaya@postgres:5432/nyaya
+      ALLOWED_ORIGINS: http://localhost:3000
+    ports: ["3001:3001"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+

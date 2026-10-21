@@ -1,0 +1,8 @@
+aws_region = "ap-south-1"
+project_name = "nyayaconnect"
+environment = "production"
+web_bucket_name = "replace-with-globally-unique-name"
+ai_image = "replace.dkr.ecr.ap-south-1.amazonaws.com/nyayaconnect/ai-api:latest"
+chat_image = "replace.dkr.ecr.ap-south-1.amazonaws.com/nyayaconnect/chat-api:latest"
+db_password = "set-via-secure-ci-variable"
+

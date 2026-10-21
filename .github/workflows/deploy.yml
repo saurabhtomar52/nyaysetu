@@ -1,0 +1,39 @@
+name: Build and deploy services
+on:
+  push:
+    branches: [main]
+    paths: ["services/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/build-push-action@v6
+        with:
+          context: services/ai-api
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/nyayaconnect/ai-api:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/nyayaconnect/ai-api:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: services/chat-api
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/nyayaconnect/chat-api:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/nyayaconnect/chat-api:latest
+      - run: |
+          aws ecs update-service --cluster nyayaconnect-production --service ai-api --force-new-deployment
+          aws ecs update-service --cluster nyayaconnect-production --service chat-api --force-new-deployment
