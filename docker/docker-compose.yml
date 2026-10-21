@@ -1,20 +1,41 @@
 services:
   postgres:
-    image: postgis/postgis:16-3.4
+    image: postgis/postgis:15-3.3
     environment:
       POSTGRES_DB: nyaya
       POSTGRES_USER: nyaya
       POSTGRES_PASSWORD: nyaya
     ports: ["5432:5432"]
-    volumes: ["../scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro"]
+    volumes:
+      - "../scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nyaya -d nyaya && psql -U nyaya -d nyaya -tAc 'SELECT PostGIS_Version()' | grep -q ."]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
   ai-service:
     build: { context: .., dockerfile: docker/Dockerfile.ai-service }
     ports: ["8000:8000"]
-    depends_on: [postgres]
-  chat-service:
-    image: node:22-alpine
-    working_dir: /app
-    command: ["node", "server.js"]
-    volumes: ["../backend/chat-service:/app:ro"]
-    ports: ["3001:3001"]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - "../backend/ai-rag-service:/app"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      target: development
+    ports: ["3000:3000"]
+    command: ["npm", "run", "dev"]
+    volumes:
+      - "../frontend:/app"
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
 
+volumes:
+  frontend_node_modules:
