@@ -1,0 +1,20 @@
+name: Frontend CI/CD
+on:
+  pull_request:
+    paths: ["frontend/**"]
+  push:
+    branches: [main]
+    paths: ["frontend/**"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npm run build
+      - if: github.ref == 'refs/heads/main'
+        run: echo "Configure OIDC S3 sync and CloudFront invalidation here"
+

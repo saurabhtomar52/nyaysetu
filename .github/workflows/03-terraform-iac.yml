@@ -1,18 +1,19 @@
-name: Terraform
+name: Terraform IaC
 on:
   pull_request:
-    paths: ["infra/terraform/**"]
-  workflow_dispatch:
+    paths: ["terraform/**"]
+  push:
+    branches: [main]
+    paths: ["terraform/**"]
 jobs:
-  plan:
+  terraform:
     runs-on: ubuntu-latest
-    permissions: { contents: read, id-token: write }
-    defaults: { run: { working-directory: infra/terraform } }
+    defaults: { run: { working-directory: terraform } }
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-      - run: terraform init
       - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
       - run: terraform validate
       - run: terraform plan -input=false
 

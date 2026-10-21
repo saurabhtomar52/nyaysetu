@@ -1,34 +1,34 @@
-name: CI
+name: Backend CI/CD
 on:
   pull_request:
+    paths: ["backend/**", "docker/**"]
   push:
     branches: [main]
+    paths: ["backend/**", "docker/**"]
 jobs:
-  ai-api:
+  python:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: services/ai-api } }
+    defaults: { run: { working-directory: backend/ai-rag-service } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r requirements.txt
-      - run: python -m compileall app
-  chat-api:
+      - run: python -m compileall .
+  node:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: services/chat-api } }
+    defaults: { run: { working-directory: backend/chat-service } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm install
-      - run: npm run build
       - run: npm test
-  web:
+  images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [python, node]
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: apps/web } }
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: npm install
-      - run: npm run build
+      - run: echo "Configure ECR login, Docker Buildx, and ECS deployment with GitHub OIDC"
+

@@ -1,0 +1,5 @@
+aws_region = "ap-south-1"
+project_name = "nyayaconnect"
+web_bucket_name = "replace-with-a-globally-unique-name"
+db_password = "supply-through-a-secret-manager-or-CI-variable"
+
