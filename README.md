@@ -1,289 +1,289 @@
 # NyayaConnect
 
-NyayaConnect is a production-oriented LegalTech showcase and learning platform for India. It demonstrates district-based advocate discovery, 16-digit eCourts CNR lookup, and a persona-aware InLegalBERT assistant.
+NyayaConnect is an educational LegalTech project for India. It demonstrates:
+
+- a Next.js web interface in `apps/web`;
+- small FastAPI and Express services in `services/`;
+- PostgreSQL with the PostGIS extension for location-aware features; and
+- AWS infrastructure described as code in `infra/terraform`.
+
+The project uses demo data when an external eCourts or language-model provider is
+not configured. It is a learning project, not a law firm, and its responses are
+not legal advice.
 
 ## Repository layout
 
 ```text
-apps/web          Next.js App Router frontend
-services/ai-api   FastAPI RAG, spatial search, CNR lookup API
-services/chat-api Express TypeScript chat and state API
-infra/terraform   AWS ECS/RDS/S3/CloudFront/WAF/IAM observability
-.github/workflows CI checks, image publishing, Terraform, deployment
+apps/web/            Next.js App Router frontend
+services/ai-api/     FastAPI API for advocates, CNR lookup, and assistant demo
+services/chat-api/   Express + TypeScript chat API
+infra/terraform/     AWS VPC, ECS Fargate, RDS, ECR, S3, and logging resources
+.github/workflows/   CI, deployment, and Terraform workflows
 ```
 
-## Local development
+## Prerequisites
 
-1. Copy `.env.example` to `.env` and set only the integrations you intend to use.
-2. Start PostgreSQL/PostGIS and the services:
+Install the following before starting:
 
-   ```bash
-   docker compose up --build
-   ```
+- Git
+- Docker Desktop with Docker Compose
+- Node.js 22 or newer (for running the web app outside Docker)
+- Terraform 1.8 or newer (only for the infrastructure section)
+- An AWS account and configured credentials (only for Terraform)
 
-3. Run the web app from `apps/web` with `npm install && npm run dev`.
+Do not put real passwords or API keys in Git. Use environment variables, a
+local `.env` file that is ignored by Git, or a managed service such as AWS
+Secrets Manager.
 
-The APIs intentionally use safe demo data when external eCourts/LLM credentials are absent. Production deployments must provide secrets through AWS Secrets Manager.
+## Run the application locally
 
-## Production notes
+The root Compose file starts PostgreSQL/PostGIS, the AI API, and the chat API.
+It does not build the Next.js app, so start that separately.
 
-The Terraform stack targets ECS Fargate, private RDS PostgreSQL, ECR, CloudWatch, and least-privilege task roles. The edge components (ALB, CloudFront, WAF) should be added using your organization-approved modules before a production apply; the included stack avoids pretending to provision an internet-facing edge without review. Review `infra/terraform/terraform.tfvars.example` before applying.
-⚖️ NyayaConnect: Indian LegalTech & AWS DevOps Learning Sandbox
+From the repository root:
 
-Welcome 1st-Year Developers! 👋
+```powershell
+docker compose up --build
+```
 
-This project is designed as a Zero-to-Hero Learning Laboratory. Even if you only know basic Python or C/C++, this repository will guide you through building a production-grade full-stack Indian LegalTech web application and deploying it to Amazon Web Services (AWS) using modern DevOps engineering practices.
+The services are then available at:
 
-📚 Table of Contents
+| Service | URL |
+| --- | --- |
+| AI API documentation | <http://localhost:8000/docs> |
+| AI API health check | <http://localhost:8000/health> |
+| Chat API health check | <http://localhost:3001/health> |
+| PostgreSQL/PostGIS | `localhost:5432` |
 
-What Are We Building?
+In a second terminal, start the web app:
 
-ELI5: DevOps & Cloud Concepts Explained Simply
+```powershell
+Set-Location apps\web
+npm install
+npm run dev
+```
 
-System Architecture Diagram
+Open <http://localhost:3000>. The frontend defaults to the AI API at
+`http://localhost:8000`. To use another URL, set
+`NEXT_PUBLIC_AI_API_URL` before starting Next.js.
 
-Step-by-Step Learning Workflow
+To stop the Compose services, press `Ctrl+C`. To remove the containers and
+their anonymous volumes, run `docker compose down --volumes`.
 
-Phase 1: Local Development with Docker
+## What are we building?
 
-Phase 2: Database & PostGIS Geospatial Queries
+### District advocate discovery
 
-Phase 3: Building the Backend API & RAG AI
+The app can search demo advocates by district. A future database-backed version
+can use PostGIS to check whether a location is inside a district boundary and
+then sort results by a neutral rule such as distance or name.
 
-Phase 4: Frontend Development & DevOps Dashboard
+### eCourts CNR lookup
 
-Phase 5: Infrastructure as Code (Terraform)
+The API accepts a CNR that is exactly 16 alphanumeric characters. People often
+call it a “16-digit CNR”, but “16-character CNR” is more precise because a valid
+CNR can contain letters as well as numbers. The demo returns a clearly labelled
+demo response unless an approved eCourts integration is configured.
 
-Phase 6: CI/CD Pipelines (GitHub Actions)
+### Retrieval-Augmented Generation (RAG)
 
-How to Use GitHub Copilot with This Repository
+The assistant can be connected to a RAG provider. RAG means that a model first
+retrieves relevant documents and then uses them to draft an answer. It is like
+an open-book exam: the model should look at the supplied material instead of
+relying only on memory. Retrieved sources must be authoritative and the answer
+must still be checked by a qualified professional.
 
-1st-Year Practice Challenges & Exercises
+InLegalBERT is an Indian legal-language model that can be used for text
+embeddings or language understanding. It is not a court, a statute, or an
+official legal authority. A RAG system should cite the actual source documents
+(for example, legislation or a court judgment), not present InLegalBERT itself
+as proof of a legal rule.
 
-Glossary of Terms
+## AWS and DevOps concepts, explained simply
 
-🎯 What Are We Building?
+| Concept | Beginner analogy | What it means here |
+| --- | --- | --- |
+| Docker container | A shipping container | Packages an API together with its runtime and libraries, so the same package can run on a laptop or a server. |
+| Amazon ECS Fargate | A warehouse that runs containers | AWS starts and monitors containers without requiring us to manage the underlying virtual machines. |
+| Terraform (Infrastructure as Code) | A reusable building blueprint | `.tf` files describe networks, databases, container tasks, and permissions so infrastructure can be reviewed and recreated consistently. |
+| CI/CD | A factory quality-control line | GitHub Actions can test code, scan images, build images, and publish or deploy them after a change. |
+| PostgreSQL + PostGIS | A spreadsheet with a map and a GPS ruler | PostgreSQL stores the records; PostGIS adds geographic points, polygons, containment checks, and distance calculations. |
+| RAG | An open-book exam | The assistant retrieves relevant documents before drafting an answer, reducing unsupported guesses (hallucinations). |
+| Amazon ECR | A labelled warehouse shelf | Stores versioned Docker images so ECS can download the exact image it needs. |
+| Amazon RDS | A managed database caretaker | Runs PostgreSQL while AWS handles routine infrastructure tasks such as backups and maintenance options. |
+| CloudWatch | A building’s control room | Collects logs and metrics so an operator can see whether services are healthy. |
 
-We are building NyayaConnect, an Indian Legal Technology platform that solves real-world legal accessibility problems while obeying Indian legal regulations:
+## Architecture
 
-📍 District Advocate Finder: Helps citizens find nearby verified advocates in their district (e.g., Saket District Court) using PostGIS spatial algorithms.
+For local development:
 
-📜 Bar Council Compliance (BCI Rule 36): Ensures advocate listings are sorted purely by distance/alphabetical order with zero paid rankings or ad-bidding (which is illegal under Indian law).
+```text
+Browser (Next.js)
+        |
+        +--> FastAPI AI API :8000 ----+
+        |                             |
+        +--> Express chat API :3001   +--> PostgreSQL/PostGIS :5432
+```
 
-🔍 16-Digit eCourts Tracker: Lookup case status using the National Judicial Data Grid (NJDG) Case Number Record (CNR) format.
+The Terraform example describes the main AWS building blocks:
 
-🤖 Multi-Persona AI Legal Assistant: A Retrieval-Augmented Generation (RAG) assistant using InLegalBERT fine-tuned embeddings with 3 distinct modes:
+```text
+Browser -> ECS Fargate services -> private RDS PostgreSQL
+              |
+              +--> ECR images and CloudWatch logs
+VPC, public/private subnets, NAT gateway, security groups, S3 bucket
+```
 
-Citizen Mode: Plain-language legal literacy explanations.
+The Terraform files are a learning starting point, not a guarantee that every
+production edge component (such as an HTTPS load balancer or CloudFront
+distribution) is configured. Review the plan before applying anything.
 
-Student Mode: Ratio decidendi & Supreme Court case precedent citations.
+## Learning workflow
 
-Advocate Mode: Legal notice drafting templates.
+### 1. Explore the APIs
 
-⚡ Interactive DevOps Dashboard: A built-in web tab that visualizes AWS server health, live container logs, and CI/CD build pipelines in real time!
+With the containers running, try these commands from any terminal:
 
-💡 ELI5: DevOps & Cloud Concepts Explained Simply
+```powershell
+Invoke-RestMethod http://localhost:8000/health
+Invoke-RestMethod http://localhost:8000/api/v1/advocates?district=Delhi
+Invoke-RestMethod http://localhost:8000/api/v1/cases/ABCDEF1234567890
+```
 
-If you are in your first year of computer science, terms like CI/CD, Fargate, or Terraform might sound intimidating. Here are simple real-world analogies:
+The last request uses a syntactically valid 16-character demo CNR. It does not
+look up a real case unless an external integration is configured.
 
-Tech Term
+For the chat API:
 
-Real-World Analogy
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri http://localhost:3001/api/v1/conversations/messages `
+  -ContentType "application/json" `
+  -Body '{"message":"What is a CNR number?"}'
+```
 
-What It Actually Does in Our App
+### 2. Try a PostGIS query
 
-Docker (Containers)
+PostGIS is included in the database image, but the current root API uses
+in-memory demo advocates. You can practise the spatial SQL idea in `psql`:
 
-Shipping Containers 📦
+```sql
+SELECT ST_DWithin(
+  ST_SetSRID(ST_Point(77.2090, 28.6139), 4326)::geography,
+  ST_SetSRID(ST_Point(77.2167, 28.5355), 4326)::geography,
+  10000
+) AS within_ten_kilometres;
+```
 
-Wraps our Python/Node code and software tools into a neat package so it runs identically on your laptop, your friend's laptop, or AWS servers.
+`ST_DWithin` answers “are these points within this distance?” The cast to
+`geography` makes the distance use metres on the earth rather than treating
+latitude and longitude as ordinary flat numbers.
 
-Terraform (IaC)
+### 3. Inspect the backend
 
-Architectural Blueprints 🏗️
+Read `services/ai-api/app/main.py` and
+`services/chat-api/src/server.ts`. Notice the input validation, health
+endpoints, demo fallback, and the explicit legal-information disclaimer.
 
-Instead of clicking buttons in AWS Console manually, you write code files (.tf) that automatically order AWS to build database servers, networks, and firewalls.
+### 4. Run the frontend
 
-CI/CD (Automation)
+Read `apps/web/app/page.tsx` and follow how the page calls the AI API. The
+frontend currently displays illustrative results until a persistent dataset and
+production integrations are connected.
 
-Assembly Line Robot 🤖
+### 5. Validate Terraform safely
 
-Automatically tests your code every time you git push, checks for bugs, builds Docker containers, and updates the website on the internet without taking down the server.
+The example variables contain placeholders, so do not apply them unchanged.
+From the repository root:
 
-PostGIS (GIS Database)
-
-GPS Map inside SQL 🗺️
-
-An extension for PostgreSQL that calculates whether a user's location pin falls inside a District Court's polygon map boundary.
-
-Vector Database / RAG
-
-Open-Book Exam for AI 📖
-
-AI models can hallucinate. RAG lets the AI look up exact Indian Penal Code (BNS 2023) sections from our database before answering the user.
-
-🏗️ System Architecture Diagram
-
-Traffic flows from a user's browser down into our AWS infrastructure in India:
-
-                                [ User / Litigant ]
-                                         │
-                                         ▼
-                            [ AWS CloudFront CDN ]
-                     (Caches Static Assets World-Wide)
-                                         │
-                   ┌─────────────────────┴─────────────────────┐
-                   ▼                                           ▼
-          [ AWS S3 Bucket ]                         [ Application Load ]
-       (Next.js Frontend Static Files)                  [ Balancer (ALB)   ]
-                                                               │
-                                                               ▼
-                                                    [ AWS ECS Fargate Cluster ]
-                                                    (FastAPI + RAG Microservice)
-                                                               │
-                                                               ▼
-                                                    [ AWS RDS PostgreSQL ]
-                                                    (PostGIS + Pgvector DB)
-
-
-🛠️ Step-by-Step Learning Workflow
-
-Follow these 6 sequential phases to master the codebase step-by-step:
-
-Phase 1: Local Development with Docker
-
-Prerequisites: Install Docker Desktop, Git, and VS Code.
-
-Start Local Environment:
-
-git clone https://github.com/your-username/nyayaconnect-devops-portfolio.git
-cd nyayaconnect-devops-portfolio
-docker compose -f docker/docker-compose.yml up --build
-
-
-Verify running containers:
-
-Web App: http://localhost:3000
-
-FastAPI Docs: http://localhost:8000/docs
-
-PostgreSQL: localhost:5432
-
-Phase 2: Database & PostGIS Geospatial Queries
-
-Learn how spatial indexing works by inspecting scripts/init-db.sql.
-
-Check District Containment Query (ST_Contains):
-
-SELECT adv.full_name, adv.primary_court 
-FROM advocates adv, districts dist 
-WHERE ST_Contains(dist.geom, ST_SetSRID(ST_MakePoint(77.2167, 28.5355), 4326))
-  AND dist.district_name = 'South Delhi';
-
-
-Why this matters for legal compliance: Results are sorted purely by geographical distance (ST_DistanceSphere) or alphabetical order, guaranteeing zero commercial bias under BCI Rule 36.
-
-Phase 3: Building the Backend API & RAG AI
-
-Open backend/ai-rag-service/main.py.
-
-FastAPI Endpoints:
-
-POST /api/v1/ai/chat: Receives user legal queries and runs vector similarity search against pgvector.
-
-GET /api/v1/directory/district-search: Fetches verified advocates matching GeoJSON boundaries.
-
-Phase 4: Frontend Development & DevOps Dashboard
-
-Open frontend/src/app/devops-dashboard/page.tsx.
-
-What to study: See how Next.js fetches real-time telemetry metrics (CPU usage, memory consumption, active Docker containers) and renders them in an interactive dashboard.
-
-Phase 5: Infrastructure as Code (Terraform)
-
-Navigate to the terraform/ directory:
-
-Initialize Terraform:
-
-cd terraform
+```powershell
+Set-Location infra\terraform
 terraform init
+terraform fmt -check
+terraform validate
+Copy-Item terraform.tfvars.example terraform.tfvars
+```
 
+Edit `terraform.tfvars` with a globally unique S3 bucket name and a secret
+database password. Then review a plan:
 
-Plan Deployment:
+```powershell
+terraform plan -var-file=terraform.tfvars
+```
 
-terraform plan
+`terraform plan` is like checking a building blueprint before construction.
+Only run `terraform apply -var-file=terraform.tfvars` after a qualified
+operator has reviewed networking, IAM, costs, backups, and deletion settings.
+Delete the local `terraform.tfvars` after use if it contains secrets.
 
+### 6. Understand CI/CD
 
-Study the output to see what AWS resources (VPC, Subnets, ECS, RDS) Terraform will create.
+The workflows in `.github/workflows/` are the automation factory. Read each
+workflow before enabling deployment. A typical pipeline:
 
-Phase 6: CI/CD Pipelines (GitHub Actions)
+1. installs dependencies and runs tests;
+2. scans source or container images;
+3. builds and tags an image;
+4. pushes the image to ECR; and
+5. updates ECS only when the required AWS credentials and deployment settings
+   are present.
 
-Open .github/workflows/02-backend-ci-cd.yml:
+Never copy cloud credentials into a workflow file. Use GitHub Actions secrets
+or, preferably, short-lived OIDC-based AWS credentials.
 
-What happens on git push:
+## Indian legal context and safety
 
-Lint & Test: Runs pytest unit tests on backend Python code.
+- **BCI Rule 36:** Rule 36 of the Bar Council of India Rules generally
+  restricts advocates from advertising or soliciting work. A directory should
+  therefore show factual, verifiable information and must not sell rankings,
+  endorsements, or client solicitation. This README is educational and is not
+  a complete compliance opinion; obtain current professional advice before
+  publishing a real service.
+- **CNR:** The eCourts Case Number Record is commonly referred to as a
+  16-digit number, but its identifier is 16 alphanumeric characters. Validate
+  the exact format required by the official eCourts service and do not invent
+  case data when that service is unavailable.
+- **InLegalBERT:** This is a model for Indian legal-language processing, not a
+  source of law and not an approval by the Indian judiciary. RAG answers should
+  identify their primary sources, state uncertainty, and direct users to a
+  qualified lawyer for advice.
 
-Security Scan: Runs trivy container scanner to find software vulnerabilities.
+## 1st-Year practice challenges
 
-Build & Push: Builds a Docker container and pushes it to Amazon Elastic Container Registry (ECR).
+Work through these in order. Keep changes small and test each one.
 
-Deploy: Triggers a zero-downtime rolling update on AWS ECS Fargate.
+- [ ] **Docker:** Add a Redis service to a personal copy of
+  `docker-compose.yml`, expose it on `6379`, and verify it with
+  `docker compose ps`. Do not add a password to the repository; document how
+  you would supply one through an environment variable.
+- [ ] **SQL/PostGIS:** Connect to the `nyaya` database and write a query using
+  `ST_DWithin` that finds points within 5 km of a chosen court. Explain why
+  `geography` and metres are useful in your query.
+- [ ] **Next.js:** Add a loading message and an empty-results message to
+  `apps/web/app/page.tsx`, then check the page for both a matching district and
+  a district with no demo advocates.
+- [ ] **Terraform:** Run `terraform fmt -check` and `terraform validate` in
+  `infra/terraform`. Add a `common_tags` variable only if you can thread it
+  through the resources without hard-coding credentials, then inspect the
+  resulting plan rather than applying it.
 
-🤖 How to Use GitHub Copilot with This Repository
+## Useful commands
 
-We have provided a custom Copilot instructions file at .github/copilot-instructions.md.
+```powershell
+# Check the Compose configuration without starting services.
+docker compose config
 
-Example Copilot Prompts to Try:
+# See running containers and recent logs.
+docker compose ps
+docker compose logs --tail 50 ai-api
 
-To understand code:
+# Build the web app.
+Set-Location apps\web
+npm run build
+```
 
-"Copilot, explain how ST_Contains works in backend/ai-rag-service/services/postgis_search.py as if I am a 1st-year CS student."
+## License and disclaimer
 
-To debug issues:
-
-"Copilot, my Docker container fails to connect to PostgreSQL on startup. How do I add a healthcheck in docker-compose.yml?"
-
-To learn Terraform:
-
-"Copilot, explain why we put AWS RDS PostgreSQL inside Private Subnets in terraform/modules/rds_postgis/main.tf."
-
-🧪 1st-Year Practice Challenges & Exercises
-
-Test your understanding by completing these hands-on student exercises:
-
-[ ] Exercise 1 (Docker): Add a new Redis caching container to docker/docker-compose.yml on port 6379 and link it with the FastAPI backend.
-
-[ ] Exercise 2 (SQL & PostGIS): Add a new District polygon map for Bengaluru Urban in scripts/init-db.sql with 3 sample advocate records.
-
-[ ] Exercise 3 (Frontend): Add a new button in frontend/src/app/ecourts-tracker/page.tsx that lets users export case timeline results to a downloadable PDF file.
-
-[ ] Exercise 4 (DevOps & Terraform): Modify terraform/variables.tf to add a new tag parameter ProjectOwner = "FirstYearStudent".
-
-📖 Glossary of Terms
-
-ALB (Application Load Balancer): A cloud traffic controller distributing incoming web visits evenly across backend servers.
-
-BCI Rule 36: Bar Council of India regulation prohibiting legal practitioners from advertising or soliciting clients directly or indirectly.
-
-CNR Number: 16-character alphanumeric code uniquely identifying every court case across Indian District & High Courts.
-
-Fargate: AWS serverless container runner that manages virtual servers automatically.
-
-PostGIS: Spatial database extender for PostgreSQL providing geographic object support.
-
-Pgvector: Open-source vector similarity search extension for PostgreSQL used in AI RAG engines.
-
-💻 GitHub Copilot Prompt to Re-generate or Extend this README
-
-If you want Copilot to update or add sections to this README.md, copy and paste the prompt below into Copilot Chat:
-
-Act as a Lead DevOps Mentor and Senior Full-Stack Engineer.
-
-Please review and enhance the `README.md` file for the NyayaConnect repository. Ensure the explanations remain beginner-friendly for a 1st-year Computer Science student.
-
-Requirements:
-1. Maintain clear analogies for all AWS and DevOps concepts (Containers, Terraform, CI/CD, PostGIS, RAG).
-2. Ensure all code blocks and terminal commands are runnable and accurate.
-3. Keep the 1st-year Practice Challenges section updated with hands-on tasks covering Docker, SQL, Next.js, and Terraform.
-4. Verify that legal terms (BCI Rule 36, 16-digit CNR, InLegalBERT) are accurately contextualized within Indian judiciary rules.
+No legal advice is provided by this project. Confirm current Indian statutes,
+court rules, Bar Council rules, and official eCourts documentation before
+using the project with real users or real case information.
