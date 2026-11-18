@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NyaySetu - Legal Help Made Accessible</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header><nav class="nav" data-nav><a class="brand" href="index.html">NyaySetu</a></nav></header>
+<main class="container"><section class="hero"><h1>Find trusted legal guidance</h1>
+<p>NyaySetu connects citizens with verified lawyers and provides simple access to legal information.</p>
+<a class="button secondary" href="lawyers.html">Find a Lawyer</a> <a class="button secondary" href="register.html">Register</a></section>
+<section style="margin-top:24px"><h2>How NyaySetu helps</h2><div class="grid">
+<article class="card"><h3>Search Verified Lawyers</h3><p>Filter lawyers by district and area of specialization.</p></article>
+<article class="card"><h3>Request Consultation</h3><p>Share your concern and preferred date with a lawyer.</p></article>
+<article class="card"><h3>Stay Informed</h3><p>Read sample legal news and judiciary updates.</p></article>
+</div></section><section id="admin-panel"></section></main>
+<footer>&copy; 2026 NyaySetu</footer><script src="js/app.js"></script><script>
+document.addEventListener('DOMContentLoaded',async()=>{const auth=getAuth();if(auth?.user.role==='admin'){const panel=document.querySelector('#admin-panel');panel.innerHTML='<h2>Admin: Lawyer verification</h2><div id="pending-lawyers"></div>';try{const rows=await api('/admin/lawyers/pending',{headers:authHeaders()});const list=document.querySelector('#pending-lawyers');list.innerHTML=rows.length?rows.map(p=>`<article class="card"><h3>${p.name}</h3><p>${p.district} - ${p.specialization}</p><button onclick="setLawyerStatus(${p.id},'verified')">Verify</button> <button onclick="setLawyerStatus(${p.id},'rejected')">Reject</button></article>`).join(''):'<p>No pending profiles.</p>'}catch(e){panel.innerHTML+=`<p class="error">${e.message}</p>`}});
+async function setLawyerStatus(id,status){await api(`/admin/lawyers/${id}/${status}`,{method:'PATCH',headers:authHeaders()});location.reload()}
+</script></body></html>

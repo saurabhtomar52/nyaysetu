@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Legal Assistant - NyaySetu</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header><nav class="nav" data-nav><a class="brand" href="index.html">NyaySetu</a></nav></header>
+<main class="container"><h1>AI Legal Assistant</h1><p>This demo interface does not provide legal advice or connect to an AI service.</p>
+<div class="ai-demo" id="ai-demo"><p>Ask a general question. This Phase 1 demo will show a standard informational response.</p></div>
+<form id="ai-form" class="chat-form"><input id="ai-question" placeholder="Describe your legal question" required><button type="submit">Ask</button></form></main>
+<script src="js/app.js"></script><script>
+document.querySelector('#ai-form').addEventListener('submit',e=>{e.preventDefault();const q=document.querySelector('#ai-question').value.trim();document.querySelector('#ai-demo').innerHTML=`<p><strong>You:</strong> ${q}</p><p><strong>NyaySetu:</strong> AI integration is planned for a later phase. Please consult a verified lawyer for guidance specific to your situation.</p>`;e.currentTarget.reset()});
+</script></body></html>

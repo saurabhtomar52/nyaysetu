@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Register - NyaySetu</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header><nav class="nav" data-nav><a class="brand" href="index.html">NyaySetu</a></nav></header>
+<main class="container"><h1>Create an account</h1><form id="register-form" class="form">
+<input name="name" placeholder="Full name" required><input name="email" type="email" placeholder="Email" required>
+<input name="password" type="password" minlength="6" placeholder="Password" required>
+<select id="role" name="role"><option value="citizen">Citizen</option><option value="lawyer">Lawyer</option></select>
+<div id="lawyer-fields" hidden><input name="district" placeholder="District"><input name="specialization" placeholder="Specialization">
+<input name="experience" type="number" min="0" placeholder="Experience in years"><input name="contact" placeholder="Contact details">
+<input name="barCouncilNumber" placeholder="Bar Council enrollment number"></div>
+<button type="submit">Register</button></form><p id="auth-message" class="error"></p>
+<p>Already registered? <a href="login.html">Login</a></p></main>
+<script src="js/app.js"></script><script src="js/auth.js"></script></body></html>
